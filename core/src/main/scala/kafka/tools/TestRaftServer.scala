@@ -109,7 +109,8 @@ class TestRaftServer(
       CompletableFuture.completedFuture(QuorumConfig.parseVoterConnections(config.quorumConfig.voters)),
       QuorumConfig.parseBootstrapServers(config.quorumConfig.bootstrapServers),
       endpoints,
-      new ProcessTerminatingFaultHandler.Builder().build()
+      new ProcessTerminatingFaultHandler.Builder().build(),
+      config.addReconfigurable
     )
 
     workloadGenerator = new RaftWorkloadGenerator(

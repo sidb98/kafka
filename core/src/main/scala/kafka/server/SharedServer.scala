@@ -290,6 +290,11 @@ class SharedServer(
           Option(controllerServerMetrics).foreach(_.setIgnoredStaticVoters(ignoredStaticVoters))
         }
 
+        val raftManagerConfig = if (sharedServerConfig.processRoles.contains(ProcessRole.ControllerRole)) {
+          controllerConfig
+        } else {
+          brokerConfig
+        }
         val _raftManager = new KafkaRaftManager[ApiMessageAndVersion](
           clusterId,
           sharedServerConfig,
@@ -304,7 +309,8 @@ class SharedServer(
           controllerQuorumVotersFuture,
           bootstrapServers,
           listenerEndpoints,
-          raftManagerFaultHandler
+          raftManagerFaultHandler,
+          raftManagerConfig.addReconfigurable
         )
         raftManager = _raftManager
         _raftManager.startup()

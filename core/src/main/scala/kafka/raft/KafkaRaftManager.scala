@@ -27,6 +27,7 @@ import kafka.server.KafkaConfig
 import kafka.utils.Logging
 import org.apache.kafka.clients.{ApiVersions, BootstrapConfiguration, ManualMetadataUpdater, MetadataRecoveryStrategy, NetworkClient}
 import org.apache.kafka.common.KafkaException
+import org.apache.kafka.common.Reconfigurable
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.Uuid
 import org.apache.kafka.common.metrics.Metrics
@@ -97,7 +98,8 @@ class KafkaRaftManager[T](
   val controllerQuorumVotersFuture: CompletableFuture[JMap[Integer, InetSocketAddress]],
   bootstrapServers: JCollection[InetSocketAddress],
   localListeners: Endpoints,
-  fatalFaultHandler: FaultHandler
+  fatalFaultHandler: FaultHandler,
+  registerReconfigurable: Reconfigurable => Unit
 ) extends RaftManager[T] with Logging {
 
   val apiVersions = new ApiVersions()
@@ -217,6 +219,12 @@ class KafkaRaftManager[T](
       time,
       logContext
     )
+
+    channelBuilder match {
+      case reconfigurable: Reconfigurable =>
+        registerReconfigurable(reconfigurable)
+      case _ =>
+    }
 
     val metricGroupPrefix = "raft-channel"
     val collectPerConnectionMetrics = false
